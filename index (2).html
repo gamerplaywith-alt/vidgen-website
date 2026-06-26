@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VidGen AI — Image to Video</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', sans-serif; background: #0f0f13; color: #e2e2e2; min-height: 100vh; }
+
+nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 1px solid #1e1e2e; background: #13131a; }
+.logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600; color: #fff; }
+.logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+.hero { text-align: center; padding: 36px 24px 24px; }
+.hero h1 { font-size: 34px; font-weight: 700; line-height: 1.2; margin-bottom: 10px; background: linear-gradient(135deg, #fff 40%, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero p { font-size: 15px; color: #777; max-width: 460px; margin: 0 auto; }
+
+.container { max-width: 900px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* TABS */
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; background: #13131a; border: 1px solid #2a2a3e; border-radius: 12px; padding: 6px; }
+.tab { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: #777; transition: all 0.2s; border: none; background: none; }
+.tab:hover { color: #e2e2e2; }
+.tab.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+
+/* TAB CONTENT */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* EMBED SECTION */
+.embed-card { background: #13131a; border: 1px solid #2a2a3e; border-radius: 14px; overflow: hidden; margin-bottom: 16px; }
+.embed-header { padding: 16px 20px; border-bottom: 1px solid #2a2a3e; display: flex; align-items: center; justify-content: space-between; }
+.embed-title { font-size: 15px; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+.embed-badge { font-size: 11px; background: #14532d; color: #4ade80; padding: 2px 10px; border-radius: 20px; }
+.embed-frame { width: 100%; height: 700px; border: none; display: block; }
+.embed-loading { display: flex; align-items: center; justify-content: center; height: 700px; flex-direction: column; gap: 12px; background: #0f0f18; }
+.spinner { width: 40px; height: 40px; border: 3px solid #2a2a3e; border-top-color: #6366f1; border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* MODEL CARDS */
+.models-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.model-card { background: #13131a; border: 1px solid #2a2a3e; border-radius: 14px; padding: 18px; cursor: pointer; transition: all 0.2s; }
+.model-card:hover { border-color: #6366f1; transform: translateY(-2px); }
+.model-card.selected { border-color: #6366f1; background: #13132a; }
+.model-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.model-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.model-name { font-size: 15px; font-weight: 600; color: #fff; }
+.model-tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-top: 2px; }
+.model-desc { font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 12px; }
+.model-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat { background: #1a1a2e; border-radius: 6px; padding: 3px 10px; font-size: 11px; color: #888; }
+.load-btn { width: 100%; margin-top: 14px; padding: 10px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+
+/* INFO BOX */
+.info-box { background: #0d1a35; border: 1px solid #1e3a6e; border-radius: 10px; padding: 14px 18px; font-size: 13px; color: #93c5fd; line-height: 1.6; margin-bottom: 16px; }
+.info-box strong { color: #60a5fa; }
+
+@media (max-width: 600px) {
+  .models-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 26px; }
+  nav { padding: 14px 16px; }
+  .embed-frame { height: 500px; }
+  .embed-loading { height: 500px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🎬</div>
+    VidGen AI
+  </div>
+  <span style="font-size:13px;color:#555;">Free Image to Video</span>
+</nav>
+
+<div class="hero">
+  <h1>Image se Video banao<br>Bilkul Free!</h1>
+  <p>Best AI models — seedha yahan use karo, kahi aur jane ki zaroorat nahi</p>
+</div>
+
+<div class="container">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('models')">🤖 Models Choose Karo</button>
+    <button class="tab" onclick="switchTab('generator')">🎬 Generator</button>
+    <button class="tab" onclick="switchTab('howto')">📖 Kaise Use Karein</button>
+  </div>
+
+  <!-- TAB: MODELS -->
+  <div class="tab-content active" id="tab-models">
+    <div class="info-box">
+      💡 <strong>Tip:</strong> Neeche koi bhi model choose karo — woh seedha yahan open ho jaayega! Bahar jane ki zaroorat nahi.
+    </div>
+    <div class="models-grid">
+
+      <div class="model-card" onclick="loadModel('wan')">
+        <div class="model-top">
+          <div class="model-icon" style="background:#1a0a2e;">🌊</div>
+          <div>
+            <div class="model-name">WAN 2.1</div>
+            <span class="model-tag" style="background:#14532d;color:#4ade80;">🆓 Free</span>
+          </div>
+        </div>
+        <div class="model-desc">Best quality model — realistic motion, cinematic feel</div>
+        <div class="model-stats">
+          <span class="stat">✅ 5 sec</span>
+          <span class="stat">🎨 HD</span>
+          <span class="stat">🆓 Free</span>
+        </div>
+        <button class="load-btn">▶ WAN 2.1 Use Karo</button>
+      </div>
+
+      <div class="model-card" onclick="loadModel('svd')">
+        <div class="model-top">
+          <div class="model-icon" style="background:#0a1a2e;">⚡</div>
+          <div>
+            <div class="model-name">Stable Video</div>
+            <span class="model-tag" style="background:#1c1917;color:#fb923c;">⚡ Fast</span>
+          </div>
+        </div>
+        <div class="model-desc">Stable Video Diffusion — fast aur reliable</div>
+        <div class="model-stats">
+          <span class="stat">✅ 4 sec</span>
+          <span class="stat">🚀 Fast</span>
+          <span class="stat">🆓 Free</span>
+        </div>
+        <button class="load-btn" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);">▶ SVD Use Karo</button>
+      </div>
+
+      <div class="model-card" onclick="loadModel('ltx')">
+        <div class="model-top">
+          <div class="model-icon" style="background:#0a2e1a;">🎬</div>
+          <div>
+            <div class="model-name">LTX Video</div>
+            <span class="model-tag" style="background:#14532d;color:#4ade80;">🆓 Free</span>
+          </div>
+        </div>
+        <div class="model-desc">Lightricks ka model — smooth motion aur great quality</div>
+        <div class="model-stats">
+          <span class="stat">✅ 5 sec</span>
+          <span class="stat">🎨 Smooth</span>
+          <span class="stat">🆓 Free</span>
+        </div>
+        <button class="load-btn" style="background:linear-gradient(135deg,#22c55e,#16a34a);">▶ LTX Use Karo</button>
+      </div>
+
+      <div class="model-card" onclick="loadModel('animatediff')">
+        <div class="model-top">
+          <div class="model-icon" style="background:#2e1a0a;">✨</div>
+          <div>
+            <div class="model-name">AnimateDiff</div>
+            <span class="model-tag" style="background:#1e1b4b;color:#818cf8;">⭐ Popular</span>
+          </div>
+        </div>
+        <div class="model-desc">Animated style videos — creative aur unique output</div>
+        <div class="model-stats">
+          <span class="stat">✅ 3 sec</span>
+          <span class="stat">🎨 Creative</span>
+          <span class="stat">🆓 Free</span>
+        </div>
+        <button class="load-btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);">▶ AnimateDiff Use Karo</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TAB: GENERATOR -->
+  <div class="tab-content" id="tab-generator">
+    <div class="info-box" id="generatorInfo">
+      👆 <strong>Pehle "Models Choose Karo"</strong> tab se koi model select karo — phir yahan generator khulega!
+    </div>
+    <div class="embed-card" id="embedCard" style="display:none;">
+      <div class="embed-header">
+        <div class="embed-title">
+          <span id="embedIcon">🤖</span>
+          <span id="embedName">AI Generator</span>
+        </div>
+        <span class="embed-badge">🆓 Free</span>
+      </div>
+      <div id="embedLoading" class="embed-loading">
+        <div class="spinner"></div>
+        <span style="font-size:13px;color:#555;">Model load ho raha hai...</span>
+      </div>
+      <iframe
+        id="embedFrame"
+        class="embed-frame"
+        style="display:none;"
+        allow="camera;microphone;clipboard-write;"
+        onload="frameLoaded()"
+        title="AI Video Generator">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- TAB: HOW TO -->
+  <div class="tab-content" id="tab-howto">
+    <div class="embed-card">
+      <div style="padding:24px;">
+        <div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:20px;">📖 Kaise Use Karein?</div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">1</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">Model Choose Karo</div>
+              <div style="font-size:13px;color:#666;">"Models Choose Karo" tab mein jaao aur apna pasandida model click karo</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">2</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">Generator Tab Mein Jao</div>
+              <div style="font-size:13px;color:#666;">Model load ho jaayega — seedha yahan aapki website pe</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">3</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:4px;">Image Upload Karo</div>
+              <div style="font-size:13px;color:#666;">Apni image upload karo, prompt likho aur Generate dabao</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:14px;align-items:flex-start;">
+            <div style="width:32px;height:32px;border-radius:50%;background:#22c55e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">✓</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;color:#22c55e;margin-bottom:4px;">Video Download Karo!</div>
+              <div style="font-size:13px;color:#666;">Video ban jaayegi — download karo aur share karo!</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px;background:#1f0d0d;border:1px solid #ef444433;border-radius:10px;padding:14px;">
+          <div style="font-size:13px;color:#f87171;line-height:1.6;">
+            ⚠️ <strong>Yaad rakho:</strong> Yeh sab free models hain — kabhi kabhi busy hote hain ya slow hote hain. Agar ek kaam na kare to doosra try karo!
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const models = {
+    wan: {
+      name: 'WAN 2.1',
+      icon: '🌊',
+      url: 'https://huggingface.co/spaces/wan-video/Wan2.1-I2V-14B-480P'
+    },
+    svd: {
+      name: 'Stable Video Diffusion',
+      icon: '⚡',
+      url: 'https://huggingface.co/spaces/multimodalart/stable-video-diffusion'
+    },
+    ltx: {
+      name: 'LTX Video',
+      icon: '🎬',
+      url: 'https://huggingface.co/spaces/Lightricks/LTX-Video'
+    },
+    animatediff: {
+      name: 'AnimateDiff',
+      icon: '✨',
+      url: 'https://huggingface.co/spaces/guoyww/animatediff'
+    }
+  };
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function loadModel(modelKey) {
+    const model = models[modelKey];
+    document.getElementById('embedIcon').textContent = model.icon;
+    document.getElementById('embedName').textContent = model.name;
+    document.getElementById('generatorInfo').style.display = 'none';
+    document.getElementById('embedCard').style.display = 'block';
+    document.getElementById('embedLoading').style.display = 'flex';
+    document.getElementById('embedFrame').style.display = 'none';
+    document.getElementById('embedFrame').src = model.url;
+
+    // Switch to generator tab
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tab-generator').classList.add('active');
+    document.querySelectorAll('.tab')[1].classList.add('active');
+  }
+
+  function frameLoaded() {
+    document.getElementById('embedLoading').style.display = 'none';
+    document.getElementById('embedFrame').style.display = 'block';
+  }
+</script>
+
+</body>
+</html>
